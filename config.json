@@ -1,5 +1,5 @@
 {
-    "ROLE_ID": 1,
-    "CHANNEL_ID": 1,
-    "PREFIX": "Enter_Bot_Prefix"
+    "ROLE_ID": 1234,
+    "CHANNEL_ID": 1234,
+    "PREFIX": "!"
 }
