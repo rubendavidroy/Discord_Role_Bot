@@ -1,48 +1,38 @@
+# Discord Role Bot
+# - removed flask hosting, cleaned nonsense
+
 import os
-import asyncio
-import discord
-from discord.ext import commands
-from flask import Flask
 import json
+import asyncio
 from dotenv import load_dotenv
 
-# load environment variables from .env
+import discord
+from discord.ext import commands
+
 load_dotenv()
 
-# load config data from config.json
 with open("config.json", "r") as file:
     config = json.load(file)
 
-# retrieve constants from the configuration
+# CONFIG CONSTANTS @ config.json
 ROLE_ID = config["ROLE_ID"]
 CHANNEL_ID = config["CHANNEL_ID"]
 PREFIX = config["PREFIX"]
 
-# configure bot permissions
+# perms
 intents = discord.Intents.default()
 intents.dm_messages = True
 intents.message_content = True
 intents.members = True
 
-# initialize bot with a command prefix and set intents
 bot = commands.Bot(command_prefix=PREFIX, intents=intents)
 
-# set up a Flask application
-app = Flask(__name__)
-
-# flask route for checking bot status
-@app.route('/')
-def index():
-    return "Bot Online! ✅"
-
-# event to print bot details and set its status when it's ready
 @bot.event
 async def on_ready():
-    print(f'Logged in as {bot.user.name} ({bot.user.id})')
+    print(f'Logged in as {bot.user.name} ({bot.user.id})') # <--- on ready
     activity = discord.Activity(type=discord.ActivityType.watching, name="after the server")
     await bot.change_presence(activity=activity)
 
-# check if the message is sent by a specific author in a specific channel
 def check_user_dm(m, dm_channel, author):
     return m.channel == dm_channel and m.author == author
 
@@ -57,8 +47,8 @@ async def get_user_and_role(ctx, prompt):
         check=lambda m: check_user_dm(m, dm_channel, ctx.author),
         timeout=60)
     user = discord.utils.find(
-        lambda m: m.name == username_msg.content or m.display_name ==
-        username_msg.content, ctx.guild.members)
+        lambda m: m.name == username_msg.content or m.display_name == username_msg.content,
+        ctx.guild.members)
 
     if not user:
         await dm_channel.send("User not found! Please provide a username and not a nickname. Note that this system is case-sensitive.")
@@ -105,8 +95,7 @@ async def demote(ctx):
             await user.remove_roles(demotion_role)
             print(f"{user.name} has just been demoted from {demotion_role.name}.")
             embed = discord.Embed(
-                title=
-                f"{user.name} has just been demoted from {demotion_role.name}.",
+                title=f"{user.name} has just been demoted from {demotion_role.name}.",
                 color=discord.Color.blue())
             embed.set_footer(text="Authorised by the Administrators")
             channel = bot.get_channel(CHANNEL_ID)
@@ -116,13 +105,5 @@ async def demote(ctx):
     else:
         await ctx.send("You do not have the required role to use this command.")
 
-# main execution: run bot and flask server concurrently
-if __name__ == '__main__':
-    from threading import Thread
-
-    bot_token = os.getenv("BOT_TOKEN")
-
-    t = Thread(target=bot.run, args=(bot_token, ))
-    t.start()
-
-    app.run(host='0.0.0.0', port=5000)
+bot_token = os.getenv("BOT_TOKEN")
+bot.run(bot_token)
